@@ -13,7 +13,7 @@ class WebsiteRepository:
         )
         return result.scalars().first()
     
-    async def create(self, domain: str, name: str, callback_url: str) -> Website:
+    async def create(self, domain: str, name: str) -> Website:
         import secrets
         api_key = secrets.token_urlsafe(32)
         
