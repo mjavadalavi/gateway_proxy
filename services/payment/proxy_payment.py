@@ -6,6 +6,7 @@ from typing import Dict
 from urllib.parse import urlparse
 from utils.logger import logger
 from core.config import settings
+import traceback
 from services.payment.factory import get_payment_provider
 
 class ProxyPaymentService:
@@ -25,12 +26,13 @@ class ProxyPaymentService:
     def validate_callback_url(self, website, callback_url: str) -> bool:
         try:
             callback_domain = urlparse(callback_url).netloc
+            logger.info(f"Callback: {callback_domain}, {website.domain}")
             return callback_domain == website.domain
         except Exception as e:
             logger.error(f"Callback URL validation error: {str(e)}")
             return False
 
-    async def create_payment(self, api_key: str, amount: Decimal, user_phone: str, callback_url: str, order_id: str) -> Dict:
+    async def create_payment(self, api_key: str, amount: Decimal, user_phone: str, callback_url: str) -> Dict:
         """Create payment and get gateway token"""
         try:
             website = await self.validate_api_key(api_key)
@@ -42,9 +44,10 @@ class ProxyPaymentService:
             # Create payment in gateway first
             payment_result = await self.payment_provider.create_payment(
                 amount=amount,
-                callback_url=f"{settings.BASE_URL}/api/v1/payments/callback",
+                callback_url=f"{settings.BASE_URL}/gateway/callback",
                 user_phone=user_phone
             )
+            logger.info(f"payment: {payment_result}")
 
             if not payment_result["status"]:
                 logger.error(f"Gateway payment creation failed: {payment_result}")
@@ -54,19 +57,21 @@ class ProxyPaymentService:
             await self.transaction_repo.create(
                 amount=amount,
                 website_id=website.id,
-                order_id=order_id,
                 user_phone=user_phone,
                 callback_url=callback_url,
-                gateway_token=payment_result["authority"],
+                gateway_token=payment_result["token"],
                 gateway_url=payment_result["url"]
             )
 
-            logger.info(f"Created payment request: {payment_result['authority']} for website: {website.id}")
+            logger.info(f"Created payment request: {payment_result['token']} for website: {website.id}")
             
             return {
                 "status": True,
-                "payment_url": f"{settings.BASE_URL}/api/v1/payments/process/{payment_result['authority']}"
+                "payment_url": f"{settings.BASE_URL}/payments/process/{payment_result['token']}"
             }
+
+        except HTTPException as http_ex:
+            raise http_ex
 
         except Exception as e:
             logger.error(f"Payment creation error: {str(e)}")
@@ -103,21 +108,18 @@ class ProxyPaymentService:
                 logger.warning(f"Website mismatch in verify. Expected: {transaction.website_id}, Got: {website.id}")
                 raise HTTPException(status_code=403, detail="Invalid website token")
 
-            verify_result = await self.payment_provider.verify_payment(
-                authority=authority,
-                amount=transaction.amount
-            )
+            verify_result = await self.payment_provider.verify_payment(authority, transaction.amount)
 
             if verify_result["status"]:
                 await self.transaction_repo.update_status(
-                    token=transaction.token,
+                    token=authority,
                     status="completed",
                     ref_id=verify_result["ref_id"]
                 )
                 logger.info(f"Payment verified successfully: {authority}")
             else:
                 await self.transaction_repo.update_status(
-                    token=transaction.token,
+                    token=authority,
                     status="failed"
                 )
                 logger.warning(f"Payment verification failed: {authority}")
@@ -125,5 +127,5 @@ class ProxyPaymentService:
             return verify_result
 
         except Exception as e:
-            logger.error(f"Payment verification error: {str(e)}")
+            logger.error(f"Payment verification error: {traceback.format_exc()}")
             raise HTTPException(status_code=500, detail="Payment verification failed") 

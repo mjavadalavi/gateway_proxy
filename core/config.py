@@ -3,13 +3,16 @@ from functools import lru_cache
 from typing import Optional
 
 class Settings(BaseSettings):
+    PROJECT_NAME: str = "Gateway Proxy"
+    VERSION: str = "1.0.0"
+    API_V1_STR: str = "/api/v1"
     
     # Database
     POSTGRES_SERVER: str = "db"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
-    POSTGRES_PORT: str
+    POSTGRES_PORT: int = 5432
     DATABASE_URL: Optional[str] = None
 
     @property
@@ -25,6 +28,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
     
+    #PORTS
+    ADMINER_PORT: int
+    WEB_PORT: int
 
     # Payment Gateway
     PAYMENT_GATEWAY: str = "zarinpal"

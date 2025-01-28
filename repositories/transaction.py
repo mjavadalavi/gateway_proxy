@@ -14,7 +14,6 @@ class TransactionRepository:
         self, 
         amount: Decimal,
         website_id: int,
-        order_id: str,
         user_phone: str,
         callback_url: str,
         gateway_token: str,
@@ -24,7 +23,6 @@ class TransactionRepository:
         transaction = Transaction(
             amount=amount,
             website_id=website_id,
-            order_id=order_id,
             user_phone=user_phone,
             callback_url=callback_url,
             status="pending",
@@ -56,7 +54,7 @@ class TransactionRepository:
     async def update_status(self, token: str, status: str, ref_id: Optional[str] = None) -> Optional[Transaction]:
         """Update transaction status and ref_id"""
         query = update(Transaction).where(
-            Transaction.token == token
+            Transaction.gateway_token == token
         ).values(
             status=status,
             ref_id=ref_id

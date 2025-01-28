@@ -6,7 +6,6 @@ class PaymentCreate(BaseModel):
     amount: Decimal
     user_phone: str
     callback_url: HttpUrl
-    order_id: str
 
 
 class PaymentCreateResponse(BaseModel):

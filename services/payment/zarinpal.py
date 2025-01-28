@@ -98,7 +98,13 @@ class ZarinpalProvider(BasePaymentProvider):
                         "status": True,
                         "ref_id": result["data"].get("ref_id")
                     }
-                
+
+                if result.get("data", {}).get("code") == 101:
+                    return {
+                        "status": False,
+                        "ref_id": result["data"].get("ref_id")
+                    }
+
                 return {
                     "status": False,
                     "message": result.get("errors", {}).get("message", "خطا در تایید پرداخت")

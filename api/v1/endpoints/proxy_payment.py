@@ -29,8 +29,7 @@ async def create_payment(
         api_key=x_api_key,
         amount=payment.amount,
         user_phone=payment.user_phone,
-        callback_url=str(payment.callback_url),
-        order_id=payment.order_id
+        callback_url=str(payment.callback_url)
     )
     return result
 
