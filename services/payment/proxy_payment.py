@@ -67,6 +67,7 @@ class ProxyPaymentService:
             
             return {
                 "status": True,
+                "token": payment_result['token'],
                 "payment_url": f"{settings.BASE_URL}/payments/process/{payment_result['token']}"
             }
 
