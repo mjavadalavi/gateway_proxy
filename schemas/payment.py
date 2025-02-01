@@ -10,4 +10,5 @@ class PaymentCreate(BaseModel):
 
 class PaymentCreateResponse(BaseModel):
     status: bool
+    token: str
     payment_url: str  # URL for redirecting to payment page 

@@ -115,7 +115,7 @@ class ProxyPaymentService:
                 await self.transaction_repo.update_status(
                     token=authority,
                     status="completed",
-                    ref_id=verify_result["ref_id"]
+                    ref_id=str(verify_result["ref_id"])
                 )
                 logger.info(f"Payment verified successfully: {authority}")
             else:
