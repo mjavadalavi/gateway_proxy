@@ -32,12 +32,16 @@ class Settings(BaseSettings):
     ADMINER_PORT: int
     WEB_PORT: int
 
+    HOST: str = "0.0.0.0"
+    SOURCE_COMMIT: str = '7d5b2b82dc95340f35f7ec64a869e28acafb5db6'
+
     # Payment Gateway
     PAYMENT_GATEWAY: str = "zarinpal"
     ZARINPAL_MERCHANT_ID: str
     PAYMENT_ENV: str = "sandbox"
     PAYMENT_CALLBACK: str = "https://pay.roblit.ir/payment/callback"
     ZARINPAL_GATEWAY_URL: str = "https://www.zarinpal.com/pg/StartPay/"
+    ZIBAL_MERCHANT_ID: str
 
     # Application
     BASE_URL: str = "https://pay.example.com"

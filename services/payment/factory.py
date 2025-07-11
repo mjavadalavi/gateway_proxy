@@ -1,10 +1,12 @@
 from core.config import settings
 from .base import BasePaymentProvider
 from .zarinpal import ZarinpalProvider
+from .zibal import ZibalProvider
 
 def get_payment_provider() -> BasePaymentProvider:
     providers = {
-        "zarinpal": ZarinpalProvider
+        "zarinpal": ZarinpalProvider,
+        'zibal': ZibalProvider
     }
     
     provider_class = providers.get(settings.PAYMENT_GATEWAY)
