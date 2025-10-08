@@ -34,7 +34,7 @@ class ZarinpalProvider(BasePaymentProvider):
     async def create_payment(self, amount: Decimal, callback_url: str, user_phone: str) -> Dict:
         data = {
             "merchant_id": self.merchant_id,
-            "amount": int(amount * 10),  # تبدیل به ریال
+            "amount": int(amount),  # تبدیل به ریال
             "callback_url": callback_url,
             "description": "شارژ کیف پول",
             "metadata": {
@@ -76,7 +76,7 @@ class ZarinpalProvider(BasePaymentProvider):
         data = {
             "merchant_id": self.merchant_id,
             "authority": token,
-            "amount": int(amount) * 10
+            "amount": int(amount)
         }
         
         logger.info(f"Payment verification request to Zarinpal: {str(data)}")
