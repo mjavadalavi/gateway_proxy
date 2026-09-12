@@ -19,10 +19,10 @@ async def create_payment(
     try:
         # Validate API key first - will raise HTTPException if invalid
         if not await payment_service.validate_api_key(x_api_key):
-            logger.warning(f"Invalid API key attempt: {x_api_key}")
+            logger.warning("Invalid API key attempt")
             raise HTTPException(status_code=403, detail="Invalid API key")
     except HTTPException:
-        logger.warning(f"Invalid API key attempt: {x_api_key}")
+        logger.warning("Invalid API key attempt")
         raise HTTPException(status_code=403, detail="Invalid API key")
 
     result = await payment_service.create_payment(
@@ -60,14 +60,14 @@ async def verify_payment(
     try:
         # Validate API key first - will raise HTTPException if invalid
         if not await payment_service.validate_api_key(x_api_key):
-            logger.warning(f"Invalid API key attempt: {x_api_key}")
+            logger.warning("Invalid API key attempt")
             raise HTTPException(status_code=403, detail="Invalid API key")
     except HTTPException:
-        logger.warning(f"Invalid API key attempt: {x_api_key}")
+        logger.warning("Invalid API key attempt")
         raise HTTPException(status_code=403, detail="Invalid API key")
 
     result = await payment_service.verify_payment(
         authority=authority,
         website_token=x_api_key
     )
-    return result 
+    return result

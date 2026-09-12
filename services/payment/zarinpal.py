@@ -42,9 +42,10 @@ class ZarinpalProvider(BasePaymentProvider):
             }
         }
         
-        logger.info(f"Payment request to Zarinpal (sandbox: {self.is_sandbox})", extra={
+        logger.info("Payment request to Zarinpal", extra={
+            "sandbox": self.is_sandbox,
             "api_url": self.api_url,
-            "data": data
+            "amount": data["amount"],
         })
         
         async with aiohttp.ClientSession() as session:
@@ -57,10 +58,20 @@ class ZarinpalProvider(BasePaymentProvider):
                 }
             ) as response:
                 result = await response.json()
-                logger.info(f"Zarinpal response", extra={"response": result})
+                data_result = result.get("data")
+                data_result = data_result if isinstance(data_result, dict) else {}
+                error_result = result.get("errors")
+                error_result = error_result if isinstance(error_result, dict) else {}
+                logger.info(
+                    "Zarinpal payment response",
+                    extra={
+                        "http_status": response.status,
+                        "code": data_result.get("code") or error_result.get("code"),
+                    },
+                )
                 
-                if result.get("data", {}).get("code") == 100:
-                    authority = result["data"]["authority"]
+                if data_result.get("code") == 100:
+                    authority = data_result["authority"]
                     return {
                         "status": True,
                         "token": authority,
@@ -69,7 +80,10 @@ class ZarinpalProvider(BasePaymentProvider):
                 
                 return {
                     "status": False,
-                    "message": result.get("errors", {}).get("message", "خطا در اتصال به درگاه پرداخت")
+                    "message": error_result.get(
+                        "message",
+                        "خطا در اتصال به درگاه پرداخت",
+                    ),
                 }
     
     async def verify_payment(self, token: str, amount) -> Dict:
@@ -79,7 +93,7 @@ class ZarinpalProvider(BasePaymentProvider):
             "amount": int(amount)
         }
         
-        logger.info(f"Payment verification request to Zarinpal: {str(data)}")
+        logger.info("Payment verification request to Zarinpal")
         
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -91,21 +105,34 @@ class ZarinpalProvider(BasePaymentProvider):
                 }
             ) as response:
                 result = await response.json()
-                logger.info(f"Zarinpal verification response: {str(result)}")
+                data_result = result.get("data")
+                data_result = data_result if isinstance(data_result, dict) else {}
+                error_result = result.get("errors")
+                error_result = error_result if isinstance(error_result, dict) else {}
+                logger.info(
+                    "Zarinpal verification response",
+                    extra={
+                        "http_status": response.status,
+                        "code": data_result.get("code") or error_result.get("code"),
+                    },
+                )
                 
-                if result.get("data", {}).get("code") == 100:
+                if data_result.get("code") == 100:
                     return {
                         "status": True,
-                        "ref_id": result["data"].get("ref_id")
+                        "ref_id": data_result.get("ref_id")
                     }
 
-                if result.get("data", {}).get("code") == 101:
+                if data_result.get("code") == 101:
                     return {
                         "status": False,
-                        "ref_id": result["data"].get("ref_id")
+                        "ref_id": data_result.get("ref_id")
                     }
 
                 return {
                     "status": False,
-                    "message": result.get("errors", {}).get("message", "خطا در تایید پرداخت")
-                } 
+                    "message": error_result.get(
+                        "message",
+                        "خطا در تایید پرداخت",
+                    ),
+                }

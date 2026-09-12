@@ -19,7 +19,7 @@ class ProxyPaymentService:
     async def validate_api_key(self, api_key: str):
         website = await self.website_repo.get_by_api_key(api_key)
         if not website:
-            logger.warning(f"Invalid API key attempt: {api_key}")
+            logger.warning("Invalid API key attempt")
             raise HTTPException(status_code=403, detail="Invalid API key")
         return website
 
@@ -38,7 +38,10 @@ class ProxyPaymentService:
             website = await self.validate_api_key(api_key)
             
             if not self.validate_callback_url(website, callback_url):
-                logger.warning(f"Invalid callback URL attempt: {callback_url} for website: {website.id}")
+                logger.warning(
+                    "Invalid callback URL attempt",
+                    extra={"website_id": website.id},
+                )
                 raise HTTPException(status_code=400, detail="Invalid callback URL")
 
             # Create payment in gateway first
@@ -47,10 +50,13 @@ class ProxyPaymentService:
                 callback_url=f"{settings.BASE_URL}/gateway/callback",
                 user_phone=user_phone
             )
-            logger.info(f"payment: {payment_result}")
+            logger.info(
+                "Gateway payment creation completed",
+                extra={"status": bool(payment_result.get("status"))},
+            )
 
             if not payment_result["status"]:
-                logger.error(f"Gateway payment creation failed: {payment_result}")
+                logger.error("Gateway payment creation failed")
                 raise HTTPException(status_code=500, detail="Gateway payment failed")
 
             # Generate unique token and save transaction
@@ -63,7 +69,10 @@ class ProxyPaymentService:
                 gateway_url=payment_result["url"]
             )
 
-            logger.info(f"Created payment request: {payment_result['token']} for website: {website.id}")
+            logger.info(
+                "Created payment request",
+                extra={"website_id": website.id},
+            )
             
             return {
                 "status": True,
@@ -83,7 +92,7 @@ class ProxyPaymentService:
         try:
             transaction = await self.transaction_repo.get_by_gateway_token(gateway_token)
             if not transaction:
-                logger.warning(f"Invalid payment token attempt: {gateway_token}")
+                logger.warning("Invalid payment token attempt")
                 raise HTTPException(status_code=404, detail="Transaction not found")
 
             # Just return the gateway URL with authority
@@ -117,16 +126,16 @@ class ProxyPaymentService:
                     status="completed",
                     ref_id=str(verify_result["ref_id"])
                 )
-                logger.info(f"Payment verified successfully: {authority}")
+                logger.info("Payment verified successfully")
             else:
                 await self.transaction_repo.update_status(
                     token=authority,
                     status="failed"
                 )
-                logger.warning(f"Payment verification failed: {authority}")
+                logger.warning("Payment verification failed")
 
             return verify_result
 
         except Exception as e:
             logger.error(f"Payment verification error: {traceback.format_exc()}")
-            raise HTTPException(status_code=500, detail="Payment verification failed") 
+            raise HTTPException(status_code=500, detail="Payment verification failed")

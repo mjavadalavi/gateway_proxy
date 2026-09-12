@@ -50,4 +50,9 @@ async def shutdown():
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"} 
+    return {"Hello": "World"}
+
+
+@app.get("/health/")
+def health_check():
+    return {"status": "ok"}
