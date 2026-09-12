@@ -5,7 +5,7 @@ from core.config import settings
 # Create async engine
 engine = create_async_engine(
     settings.SQLALCHEMY_DATABASE_URL,
-    echo=True,
+    echo=False,
     future=True
 )
 
@@ -24,4 +24,4 @@ async def get_db() -> AsyncSession:
         try:
             yield session
         finally:
-            await session.close() 
+            await session.close()

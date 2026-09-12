@@ -111,11 +111,11 @@ class ProxyPaymentService:
             transaction = await self.transaction_repo.get_by_gateway_token(authority)
             
             if not transaction:
-                logger.warning(f"Invalid authority in verify: {authority}")
+                logger.warning("Invalid authority in payment verification")
                 raise HTTPException(status_code=404, detail="Transaction not found")
 
             if transaction.website_id != website.id:
-                logger.warning(f"Website mismatch in verify. Expected: {transaction.website_id}, Got: {website.id}")
+                logger.warning("Website mismatch in payment verification")
                 raise HTTPException(status_code=403, detail="Invalid website token")
 
             verify_result = await self.payment_provider.verify_payment(authority, transaction.amount)
